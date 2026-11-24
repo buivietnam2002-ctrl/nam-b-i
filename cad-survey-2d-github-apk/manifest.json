@@ -1,0 +1,17 @@
+{
+  "name": "CAD Survey 2D - Khảo sát & Thiết kế Tủ bếp",
+  "short_name": "CAD Survey 2D",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%230f172a'/%3E%3Crect x='72' y='72' width='368' height='368' rx='36' fill='none' stroke='%2338bdf8' stroke-width='24'/%3E%3Cpath d='M136 360V152h96c52 0 84 28 84 72s-32 72-84 72h-96' fill='none' stroke='%23f8fafc' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='356' cy='356' r='28' fill='%2322c55e'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="manifest.json" />
+  <title>CAD Survey 2D - Khảo sát & Thiết kế Tủ bếp</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    header { background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .brand { font-weight: 700; font-size: 15px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+    .toolbar { display: flex; gap: 6px; flex-wrap: wrap; }
+    button, select, input { background: #334155; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+    button { cursor: pointer; font-weight: 600; }
+    button:hover { background: #475569; }
+    button.primary { background: #0284c7; border-color: #0369a1; }
+    button.success { background: #16a34a; border-color: #15803d; }
+    .workspace { flex: 1; display: flex; position: relative; overflow: hidden; }
+    .sidebar { width: 320px; max-width: 85vw; background: #1e293b; border-right: 1px solid #334155; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px; }
+    .card h3 { font-size: 13px; color: #38bdf8; margin-bottom: 8px; text-transform: uppercase; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 3px; }
+    input, select { width: 100%; }
+    canvas { flex: 1; background: #090d16; touch-action: none; display: block; }
+    @media (max-width: 768px) {
+      .workspace { flex-direction: column; }
+      .sidebar { width: 100%; max-width: 100%; max-height: 44vh; border-right: none; border-bottom: 1px solid #334155; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">📐 CAD SURVEY 2D — KITPRO</div>
+    <div class="toolbar">
+      <button class="primary" onclick="drawSurvey()">Dựng Mặt bằng</button>
+      <button onclick="addCabinet('base')">+ Tủ dưới</button>
+      <button onclick="addCabinet('wall')">+ Tủ trên</button>
+      <button onclick="addCabinet('tall')">+ Tủ đứng</button>
+      <button onclick="addCabinet('hood')">+ Hút mùi</button>
+      <button onclick="toggleElevation()">Mặt đứng (Cánh/Thùng)</button>
+      <button class="success" onclick="exportDXF()">Xuất DXF</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <aside class="sidebar">
+      <div class="card">
+        <h3>1. Khảo sát Lọt lòng Diện A - B - C</h3>
+        <div class="row">
+          <div>
+            <label>Kiểu mặt bằng</label>
+            <select id="layoutType" onchange="drawSurvey()">
+              <option value="U">Chữ U (Diện A - B - C)</option>
+              <option value="L_LEFT">Chữ L Trái (A - B)</option>
+              <option value="L_RIGHT">Chữ L Phải (B - C)</option>
+              <option value="I">Chữ I (Diện B)</option>
+            </select>
+          </div>
+          <div>
+            <label>Hồi mặc định (mm)</label>
+            <input type="number" id="panelThick" value="18" readonly />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Dài Diện A (mm)</label>
+            <input type="number" id="lenA" value="1800" onchange="drawSurvey()" />
+          </div>
+          <div>
+            <label>Dài Diện B (mm)</label>
+            <input type="number" id="lenB" value="3200" onchange="drawSurvey()" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Dài Diện C (mm)</label>
+            <input type="number" id="lenC" value="1600" onchange="drawSurvey()" />
+          </div>
+          <div>
+            <label>Góc A-B / B-C (°)</label>
+            <input type="number" id="angleAB" value="90" step="0.1" onchange="drawSurvey()" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>2. Cột (Mép) & Điểm M&E (Tim)</h3>
+        <div class="row">
+          <div>
+            <label>Mép Cột từ trái B (mm)</label>
+            <input type="number" id="colLeft" value="0" onchange="drawSurvey()" />
+          </div>
+          <div>
+            <label>Rộng × Sâu Cột (mm)</label>
+            <input type="text" id="colSize" value="300x200" onchange="drawSurvey()" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Tim Thoát nước B (mm)</label>
+            <input type="number" id="drainX" value="1100" onchange="drawSurvey()" />
+          </div>
+          <div>
+            <label>Tim Hút mùi B (mm)</label>
+            <input type="number" id="hoodX" value="2300" onchange="drawSurvey()" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>3. Danh sách Module Tủ Bếp</h3>
+        <div id="cabList" style="font-size:12px; color:#cbd5e1; display:flex; flex-direction:column; gap:4px;"></div>
+      </div>
+    </aside>
+
+    <canvas id="cadCanvas"></canvas>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    const canvas = document.getElementById('cadCanvas');
+    const ctx = canvas.getContext('2d');
+    let showElevation = false;
+    let showDoors = true;
+    let cabinets = [
+      { type: 'base', label: 'Tủ chậu rửa', w: 900, d: 580, h: 810 },
+      { type: 'base', label: 'Ngăn kéo gia vị', w: 400, d: 580, h: 810 },
+      { type: 'base', label: 'Tủ bếp từ', w: 800, d: 580, h: 810 },
+      { type: 'tall', label: 'Tủ kho / Lò', w: 600, d: 580, h: 2200 }
+    ];
+
+    function resize() {
+      canvas.width = canvas.clientWidth * window.devicePixelRatio;
+      canvas.height = canvas.clientHeight * window.devicePixelRatio;
+      ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+      drawSurvey();
+    }
+    window.addEventListener('resize', resize);
+
+    function renderCabList() {
+      const box = document.getElementById('cabList');
+      box.innerHTML = cabinets.map((c, i) =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;background:#1e293b;padding:4px 8px;border-radius:4px;">
+          <span>${i + 1}. ${c.label} (${c.w}×${c.d})</span>
+          <button style="padding:2px 6px;background:#dc2626;border:none;" onclick="removeCab(${i})">×</button>
+        </div>`
+      ).join('');
+    }
+
+    function addCabinet(type) {
+      const presets = {
+        base: { type: 'base', label: 'Tủ dưới 2 cánh', w: 800, d: 580, h: 810 },
+        wall: { type: 'wall', label: 'Tủ trên 2 cánh', w: 800, d: 350, h: 750 },
+        tall: { type: 'tall', label: 'Tủ đứng', w: 600, d: 580, h: 2200 },
+        hood: { type: 'hood', label: 'Tủ hút mùi', w: 700, d: 350, h: 750 }
+      };
+      cabinets.push({ ...presets[type] });
+      renderCabList();
+      drawSurvey();
+    }
+
+    function removeCab(idx) {
+      cabinets.splice(idx, 1);
+      renderCabList();
+      drawSurvey();
+    }
+
+    function toggleElevation() {
+      if (!showElevation) {
+        showElevation = true;
+        showDoors = true;
+      } else if (showDoors) {
+        showDoors = false;
+      } else {
+        showElevation = false;
+      }
+      drawSurvey();
+    }
+
+    function drawDim(x1, y1, x2, y2, text, offset = -24) {
+      ctx.save();
+      ctx.strokeStyle = '#ef4444';
+      ctx.fillStyle = '#f8fafc';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1); ctx.lineTo(x1, y1 + offset);
+      ctx.moveTo(x2, y2); ctx.lineTo(x2, y2 + offset);
+      ctx.moveTo(x1, y1 + offset * 0.75); ctx.lineTo(x2, y2 + offset * 0.75);
+      ctx.stroke();
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, (x1 + x2) / 2, y1 + offset * 0.75 - 5);
+      ctx.restore();
+    }
+
+    function drawSurvey() {
+      const W = canvas.clientWidth;
+      const H = canvas.clientHeight;
+      ctx.clearRect(0, 0, W, H);
+
+      const layout = document.getElementById('layoutType').value;
+      const lenA = Number(document.getElementById('lenA').value) || 1800;
+      const lenB = Number(document.getElementById('lenB').value) || 3200;
+      const lenC = Number(document.getElementById('lenC').value) || 1600;
+      const colLeft = Number(document.getElementById('colLeft').value) || 0;
+      const [colW, colD] = (document.getElementById('colSize').value || '300x200').split('x').map(Number);
+      const drainX = Number(document.getElementById('drainX').value) || 0;
+      const hoodX = Number(document.getElementById('hoodX').value) || 0;
+
+      const scale = Math.min((W - 120) / Math.max(lenB, 2500), (H - 140) / Math.max(lenA, lenC, 2200), 0.22);
+      const ox = (W - lenB * scale) / 2;
+      const oy = 90;
+
+      if (showElevation) {
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(showDoors ? 'MẶT ĐỨNG DIỆN B — CÓ CÁNH' : 'MẶT ĐỨNG DIỆN B — THÙNG KHÔNG CÁNH (HỒI 18MM)', ox, oy - 35);
+        const floorY = oy + 2200 * scale;
+        ctx.strokeStyle = '#64748b';
+        ctx.beginPath(); ctx.moveTo(ox - 20, floorY); ctx.lineTo(ox + lenB * scale + 20, floorY); ctx.stroke();
+
+        let curX = ox;
+        cabinets.forEach((c) => {
+          const cw = c.w * scale;
+          const ch = c.h * scale;
+          const topY = c.type === 'wall' || c.type === 'hood' ? floorY - 2200 * scale : floorY - ch;
+          ctx.strokeStyle = '#e2e8f0';
+          ctx.lineWidth = 1.3;
+          ctx.strokeRect(curX, topY, cw, ch);
+
+          if (!showDoors) {
+            const p = Math.max(2, 18 * scale);
+            ctx.strokeStyle = '#94a3b8';
+            ctx.strokeRect(curX, topY, p, ch);
+            ctx.strokeRect(curX + cw - p, topY, p, ch);
+          } else {
+            ctx.setLineDash([4, 3]);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.moveTo(curX, topY);
+            ctx.lineTo(curX + cw, topY + ch / 2);
+            ctx.lineTo(curX, topY + ch);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+          drawDim(curX, floorY, curX + cw, floorY, `${c.w}`, 24);
+          curX += cw;
+        });
+        return;
+      }
+
+      // Draw Wall Inner Lines (Diện A - B - C)
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (layout === 'U' || layout === 'L_LEFT') {
+        ctx.moveTo(ox, oy + lenA * scale);
+        ctx.lineTo(ox, oy);
+      } else {
+        ctx.moveTo(ox, oy);
+      }
+      ctx.lineTo(ox + lenB * scale, oy);
+      if (layout === 'U' || layout === 'L_RIGHT') {
+        ctx.lineTo(ox + lenB * scale, oy + lenC * scale);
+      }
+      ctx.stroke();
+
+      drawDim(ox, oy, ox + lenB * scale, oy, `${lenB}`, -30);
+
+      // Column (measured by edge)
+      if (colLeft > 0 && colW > 0 && colD > 0) {
+        const cx = ox + colLeft * scale;
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.strokeRect(cx, oy, colW * scale, colD * scale);
+        ctx.beginPath();
+        ctx.moveTo(cx, oy); ctx.lineTo(cx + colW * scale, oy + colD * scale);
+        ctx.moveTo(cx + colW * scale, oy); ctx.lineTo(cx, oy + colD * scale);
+        ctx.stroke();
+      }
+
+      // M&E points (measured by centerline)
+      if (drainX > 0) {
+        const dx = ox + drainX * scale;
+        const dy = oy + 120 * scale;
+        ctx.strokeStyle = '#22c55e';
+        ctx.beginPath(); ctx.arc(dx, dy, 6, 0, Math.PI * 2); ctx.stroke();
+      }
+      if (hoodX > 0) {
+        const hx = ox + hoodX * scale;
+        const hy = oy + 180 * scale;
+        ctx.strokeStyle = '#38bdf8';
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.arc(hx, hy, 8, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Draw Base Cabinets along Diện B
+      let curX = ox;
+      cabinets.forEach((c) => {
+        const cw = c.w * scale;
+        const cd = c.d * scale;
+        const p = Math.max(2, 18 * scale);
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(curX, oy, cw, cd);
+        ctx.strokeRect(curX, oy, p, cd);
+        ctx.strokeRect(curX + cw - p, oy, p, cd);
+        curX += cw;
+      });
+    }
+
+    function exportDXF() {
+      const lenB = Number(document.getElementById('lenB').value) || 3200;
+      const dxf = [
+        '0', 'SECTION', '2', 'ENTITIES',
+        '0', 'LINE', '8', 'WALL', '10', '0', '20', '0', '11', String(lenB), '21', '0',
+        '0', 'ENDSEC', '0', 'EOF'
+      ].join('\n');
+      const blob = new Blob([dxf], { type: 'application/dxf' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'cad-survey-2d.dxf';
+      a.click();
+    }
+
+    renderCabList();
+    resize();
+  </script>
+</body>
+</html>

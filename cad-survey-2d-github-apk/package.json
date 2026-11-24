@@ -1,0 +1,17 @@
+{
+  "name": "cad-survey-2d-kitpro",
+  "version": "1.0.0",
+  "description": "CAD Survey 2D - Khảo sát & Thiết kế Tủ bếp chuyên nghiệp (KITPRO)",
+  "scripts": {
+    "build": "mkdir -p www && cp index.html manifest.json sw.js www/",
+    "android:init": "npx cap add android",
+    "android:sync": "npm run build && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/android": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
