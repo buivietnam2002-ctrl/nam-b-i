@@ -2,7 +2,6 @@
   "name": "cad-survey-2d",
   "version": "1.0.0",
   "private": true,
-  "description": "CAD Survey 2D - Khao sat & Thiet ke Tu bep (mm)",
   "scripts": {
     "build": "mkdir -p www && cp index.html manifest.json sw.js www/"
   },
