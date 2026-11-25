@@ -11,23 +11,19 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-
       - name: Install dependencies & Prepare www
         run: |
           npm install
           npm run build
-
       - name: Add Android Platform, Storage Permissions & Build Debug APK
         run: |
           npx cap add android
@@ -49,7 +45,6 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
